@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>线货架查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        body {
+            background: #f5f7fa;
+            padding: 10px;
+            max-width: 1400px;
+            margin: 0 auto;
+            font-size: 14px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        /* 头顶标题"线货架查询"加大：原18px改为24px */
+        .header h1 {
+            color: #1e6bb8;
+            margin-bottom: 6px;
+            font-size: 24px; /* 标题字体加大 */
+            font-weight: 700;
+        }
+        .search-container {
+            max-width: 700px;
+            margin: 0 auto 12px;
+            position: relative;
+            z-index: 1000;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #1e6bb8;
+            border-radius: 30px;
+            font-size: 13px;
+            outline: none;
+            color: #333;
+        }
+        #resultList {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 5px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 999;
+            display: none;
+            padding: 8px;
+        }
+        .result-item {
+            padding: 7px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 12px;
+            color: #333;
+            transition: background 0.2s;
+        }
+        .result-item:hover, .result-item:active {
+            background: #e8f0fe;
+        }
+        .result-item .area {
+            color: #1e6bb8;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .result-item .pos {
+            color: #333;
+            font-size: 12px;
+        }
+        .result-item .num {
+            color: #c0392b;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        /* 区域表格样式 - 添加水印背景 */
+        .table-section {
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+            transition: transform 0.3s, box-shadow 0.3s;
+            scroll-margin-top: 80px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        /* 水印样式 - 大字体灰色半透明 */
+        .table-section::before {
+            content: attr(data-area);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 180px; /* 大字体 */
+            font-weight: 900;
+            color: rgba(120, 120, 120, 0.08); /* 浅灰色，透明度低 */
+            z-index: -1;
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.7;
+        }
+        
+        /* 第二个水印 - 右下角 */
+        .table-section::after {
+            content: attr(data-area);
+            position: absolute;
+            top: 70%;
+            left: 70%;
+            transform: translate(-50%, -50%) rotate(15deg);
+            font-size: 160px; /* 大字体 */
+            font-weight: 900;
+            color: rgba(120, 120, 120, 0.06); /* 更浅的灰色 */
+            z-index: -1;
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.5;
+        }
+        
+        /* 第三个水印 - 左上角 */
+        .table-section .watermark-top-left {
+            content: attr(data-area);
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            transform: translate(-50%, -50%) rotate(-10deg);
+            font-size: 150px; /* 大字体 */
+            font-weight: 900;
+            color: rgba(120, 120, 120, 0.05); /* 最浅的灰色 */
+            z-index: -1;
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.4;
+        }
+        
+        /* 确保表格内容在水印之上 */
+        .shelf-table {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .table-section.active {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        /* 区域标题（C1/C2/B2等）：加居中、字体加大（原14px改为16px） */
+        .table-section h3 {
+            color: #1e6bb8;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+            font-size: 16px; /* 区域标题字体加大 */
+            font-weight: 600;
+            text-align: center; /* 区域标题居中 */
+            position: relative;
+            z-index: 3;
+        }
+        .shelf-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            table-layout: auto;
+        }
+        .shelf-table th, .shelf-table td {
+            border: 1px solid #ddd;
+            padding: 4px 5px;
+            text-align: center;
+            vertical-align: middle;
+            color: #333;
+            white-space: pre-line;
+            line-height: 1.3;
+            position: relative;
+            z-index: 3;
+        }
+        .shelf-table th {
+            background: #f5f9ff;
+            color: #222;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .shelf-table .layer {
+            background: #e8f0fe;
+            font-weight: bold;
+            color: #1e6bb8;
+            white-space: pre-line;
+            font-size: 12px;
+            padding: 4px 3px;
+            width: 40px;
+        }
+        .shelf-table .location {
+            background: #f0f2f5;
+            font-weight: bold;
+            color: #222;
+            white-space: pre-line;
+            font-size: 12px;
+            width: 60px;
+        }
+        .shelf-table td:not(.layer):not(.location) {
+            font-weight: 600;
+            font-size: 11px;
+        }
+        .target-cell {
+            background: #fff3cd !important;
+            border: 2px solid #f39c12 !important;
+            position: relative;
+            z-index: 10;
+            font-weight: bold;
+            color: #222;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(243, 156, 18, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); }
+        }
+        .highlight {
+            box-shadow: 0 0 0 2px #1e6bb8;
+        }
+        .match-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 11;
+        }
+        .no-results {
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>线货架查询</h1>
+    </div>
+
+    <div class="search-container">
+        <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="输入货号（如565、5651、LX199）" 
+            autocomplete="off"
+        >
+        <div id="resultList"></div>
+    </div>
+
+    <!-- C1区域 -->
+    <div class="table-section" data-area="C1">
+        <h3>C1区域 - C1-C1-C1</h3>
+        <table class="shelf-table">
+            <thead>
+                <tr>
+                    <th>层数</th>
+                    <th>库位</th>
+                    <th>列1</th>
+                    <th>列2</th>
+                    <th>列3</th>
+                    <th>列4</th>
+                    <th>列5</th>
+                    <th>列6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>一<br>层<br>上<br>层<br>C1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>277</td>
+                    <td>6584</td>
+                    <td>6408<br>446</td>
+                    <td>2612</td>
+                    <td>580</td>
+                    <td>008</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>047<br>247</td>
+                    <td>038</td>
+                    <td>6194<br>LX199</td>
+                    <td>2727<br>3356<br>宝蓝</td>
+                    <td>2649</td>
+                    <td>6607<br>2739</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>二<br>层<br>中<br>层<br>C1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>6572<br>2823<br>C3690</td>
+                    <td>1648<br>5448<br>LX216</td>
+                    <td>6857<br>381</td>
+                    <td>枣红<br>148</td>
+                    <td>2842<br>143<br>50</td>
+                    <td>本白</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>476</td>
+                    <td>4562<br>640</td>
+                    <td>1408<br>1011</td>
+                    <td>HX6046</td>
+                    <td>3519<br>4699<br>81001查</td>
+                    <td>1326</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>HF80</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>1325</td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>三<br>层<br>下<br>层<br>C1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>2938<br>5671</td>
+                    <td>125<br>3099</td>
+                    <td>091↓改用B2865<br><br>2773</td>
+                    <td>E140<br>1279</td>
+                    <td>367<br>2651</td>
+                    <td>1159↓改用HX2086<br><br>4456</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>3929</td>
+                    <td>3147<br>大红</td>
+                    <td>2305</td>
+                    <td>029</td>
+                    <td>773<br>3247</td>
+                    <td>2886<br>346</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>584</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>AN128</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- C2区域 -->
+    <div class="table-section" data-area="C2">
+        <h3>C2区域 - C2-C2-C2</h3>
+        <table class="shelf-table">
+            <thead>
+                <tr>
+                    <th>层数</th>
+                    <th>库位</th>
+                    <th>列1</th>
+                    <th>列2</th>
+                    <th>列3</th>
+                    <th>列4</th>
+                    <th>列5</th>
+                    <th>列6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>一<br>层<br>上<br>层<br>C2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>554</td>
+                    <td>4565</td>
+                    <td>2206</td>
+                    <td>4111</td>
+                    <td>621<br>3414</td>
+                    <td>3050<br>957<br>1643</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>452</td>
+                    <td>570</td>
+                    <td>163<br>2563</td>
+                    <td>2694</td>
+                    <td>6760</td>
+                    <td>3010</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>二<br>层<br>中<br>层<br>C2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>952</td>
+                    <td>2855</td>
+                    <td>4470<br>689</td>
+                    <td>838<br>5819</td>
+                    <td>3286<br>15-1906</td>
+                    <td>1364<br>6384</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>430<br>4778</td>
+                    <td>633<br>190</td>
+                    <td>3345<br>432</td>
+                    <td>2391</td>
+                    <td>6779<br>1645</td>
+                    <td>7065</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>4470</td>
+                    <td>1906</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>三<br>层<br>下<br>层<br>C2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>DF32<br>2405</td>
+                    <td>D471</td>
+                    <td>LX167<br>222</td>
+                    <td>4592</td>
+                    <td>1280<br>3580</td>
+                    <td>6374<br>2389</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>3092</td>
+                    <td>1434<br>B2709</td>
+                    <td>155<br>1997</td>
+                    <td>58<br>2887</td>
+                    <td>5304</td>
+                    <td>6647<br>5423</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- D2区域 -->
+    <div class="table-section" data-area="D2">
+        <h3>D2区域 - D2-D2-D2</h3>
+        <table class="shelf-table">
+            <thead>
+                <tr>
+                    <th>层数</th>
+                    <th>库位</th>
+                    <th>列1</th>
+                    <th>列2</th>
+                    <th>列3</th>
+                    <th>列4</th>
+                    <th>列5</th>
+                    <th>列6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>一<br>层<br>上<br>层<br>D2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>1245</td>
+                    <td>068</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>二<br>层<br>中<br>层<br>D2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>2607</td>
+                    <td>4490<br>XHX112</td>
+                    <td>396<br>1111<br>451</td>
+                    <td>4077</td>
+                    <td>JY296</td>
+                    <td>6333</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>141</td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>三<br>层<br>下<br>层<br>D2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>1068</td>
+                    <td>6040<br>954</td>
+                    <td>568改用<br>422450</td>
+                    <td>05001</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td></td>
+                    <td></td>
+                    <td>GH367<br>碳灰:470<br>宜蓝:X2794<br>灰蓝396</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- D1区域（两个565） -->
+    <div class="table-section" data-area="D1">
+        <h3>D1区域 - D1-D1-D1</h3>
+        <table class="shelf-table">
+            <thead>
+                <tr>
+                    <th>层数</th>
+                    <th>库位</th>
+                    <th>列1</th>
+                    <th>列2</th>
+                    <th>列3</th>
+                    <th>列4</th>
+                    <th>列5</th>
+                    <th>列6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>一<br>层<br>上<br>层<br>D1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>1884</td>
+                    <td>1548</td>
+                    <td>1919</td>
+                    <td>2127</td>
+                    <td>159</td>
+                    <td>C177</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>1981</td>
+                    <td>1011<br>大红</td>
+                    <td>1658</td>
+                    <td>1616</td>
+                    <td>2524</td>
+                    <td>2645</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>2213</td>
+                    <td>2775</td>
+                    <td>2189</td>
+                    <td>565改用↓3091</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>二<br>层<br>中<br>层<br>D1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>HD4<br>1027</td>
+                    <td>A196</td>
+                    <td>A756<br>1960</td>
+                    <td>1600</td>
+                    <td>1009<br>5573<br>1195</td>
+                    <td>A19</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>C172</td>
+                    <td>漂白<br>5291</td>
+                    <td>1108</td>
+                    <td>1229</td>
+                    <td>2372<br>1757</td>
+                    <td>2089</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>2281</td>
+                    <td>C679<br>390</td>
+                    <td>2542</td>
+                    <td>651</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>三<br>层<br>下<br>层<br>D1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>1151<br>1917</td>
+                    <td>1937</td>
+                    <td>1607</td>
+                    <td>1880</td>
+                    <td>1962</td>
+                    <td>1547</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>1247<br>金线</td>
+                    <td>1501</td>
+                    <td>A31<br>C619</td>
+                    <td>158</td>
+                    <td>2159</td>
+                    <td>2072</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>2644</td>
+                    <td>290</td>
+                    <td>2716</td>
+                    <td></td>
+                    <td>425</td>
+                    <td>565</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- A1区域（5651） -->
+    <div class="table-section" data-area="A1">
+        <h3>A1区域 - A1-A1-A1</h3>
+        <table class="shelf-table">
+            <thead>
+                <tr>
+                    <th>层数</th>
+                    <th>库位</th>
+                    <th>列1</th>
+                    <th>列2</th>
+                    <th>列3</th>
+                    <th>列4</th>
+                    <th>列5</th>
+                    <th>列6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>一<br>层<br>上<br>层<br>A1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>1858</td>
+                    <td>1827<br>7203</td>
+                    <td>2101</td>
+                    <td>274</td>
+                    <td>2132</td>
+                    <td>A874</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>509<br>6164<br>944</td>
+                    <td>A853</td>
+                    <td>2740</td>
+                    <td>C295</td>
+                    <td>628<br>2370</td>
+                    <td>7162<br>698</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>481</td>
+                    <td>2270</td>
+                    <td>5651</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>二<br>层<br>中<br>层<br>A1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>C236</td>
+                    <td>513</td>
+                    <td>2571</td>
+                    <td>7241<br>564<br>2121<br>9061</td>
+                    <td>2017</td>
+                    <td>2077</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>259</td>
+                    <td>821</td>
+                    <td>310</td>
+                    <td>385</td>
+                    <td>C600</td>
+                    <td>6050</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>C691</td>
+                    <td>C593</td>
+                    <td>626</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>三<br>层<br>下<br>层<br>A1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>本白<br>5489</td>
+                    <td>5525</td>
+                    <td>2384</td>
+                    <td>2109</td>
+                    <td>2110</td>
+                    <td>C868<br>2223<br>A619</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>5679</td>
+                    <td>C518</td>
+                    <td>C552</td>
+                    <td>A724</td>
+                    <td>518<br>6355</td>
+                    <td>429</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>黑色</td>
+                    <td>2150</td>
+                    <td>2146<br>A507<br>2362<br>2747</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- A2区域 -->
+    <div class="table-section" data-area="A2">
+        <h3>A2区域 - A2-A2-A2</h3>
+        <table class="shelf-table">
+            <thead>
+                <tr>
+                    <th>层数</th>
+                    <th>库位</th>
+                    <th>列1</th>
+                    <th>列2</th>
+                    <th>列3</th>
+                    <th>列4</th>
+                    <th>列5</th>
+                    <th>列6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>一<br>层<br>上<br>层<br>A2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>2181</td>
+                    <td>2530</td>
+                    <td>2317</td>
+                    <td>2720</td>
+                    <td>1463</td>
+                    <td>2268</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>2630<br>803</td>
+                    <td>2084</td>
+                    <td>2606<br>128<br>746<br>400</td>
+                    <td>2092</td>
+                    <td>543<br>C598</td>
+                    <td>F215↓改用<br>6125<br><br>ZH01<br>746</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>2448</td>
+                    <td>247</td>
+                    <td>2702</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>二<br>层<br>中<br>层<br>A2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>A845<br>672<br>5713</td>
+                    <td>A842<br>C150<br>1077</td>
+                    <td>1931</td>
+                    <td>A268</td>
+                    <td>C741</td>
+                    <td>1987</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>5430<br>666<br>718</td>
+                    <td>C352</td>
+                    <td>C316</td>
+                    <td>437</td>
+                    <td>C482</td>
+                    <td>A675<br>1191</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>769<br>1183</td>
+                    <td>3363<br>525</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>三<br>层<br>下<br>层<br>A2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>C50<br>C586</td>
+                    <td>5961</td>
+                    <td>5737</td>
+                    <td>5413<br>1672<br>439</td>
+                    <td>A896</td>
+                    <td>A889</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>A841</td>
+                    <td>494</td>
+                    <td>A840</td>
+                    <td>A87</td>
+                    <td>A487</td>
+                    <td>1720</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>C504</td>
+                    <td>C538</td>
+                    <td>5309</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- B1区域 -->
+    <div class="table-section" data-area="B1">
+        <h3>B1区域 - B1-B1-B1</h3>
+        <table class="shelf-table">
+            <thead>
+                <tr>
+                    <th>层数</th>
+                    <th>库位</th>
+                    <th>列1</th>
+                    <th>列2</th>
+                    <th>列3</th>
+                    <th>列4</th>
+                    <th>列5</th>
+                    <th>列6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>一<br>层<br>上<br>层<br>B1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>2194</td>
+                    <td>2388</td>
+                    <td>2365</td>
+                    <td>C90<br>526</td>
+                    <td>5445</td>
+                    <td>2073<br>2433</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>C799</td>
+                    <td>1859</td>
+                    <td>2330</td>
+                    <td>1503<br>C426</td>
+                    <td>C926</td>
+                    <td>C92</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>C519<br>064<br>653<br>402<br>5702<br>6147</td>
+                    <td>408<br>7242</td>
+                    <td>493<br>A624<br>923</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>二<br>层<br>中<br>层<br>B1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>2259<br>1820</td>
+                    <td>C610</td>
+                    <td>2266<br>500</td>
+                    <td>C695<br>476</td>
+                    <td>718</td>
+                    <td>1660<br>C319<br>C449<br>C357</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>752</td>
+                    <td>716</td>
+                    <td>757</td>
+                    <td>619<br>713</td>
+                    <td>A620</td>
+                    <td>A672</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>A765</td>
+                    <td>5407</td>
+                    <td>705<br>186</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>三<br>层<br>下<br>层<br>B1</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>447<br>6327</td>
+                    <td>C535</td>
+                    <td>2087</td>
+                    <td>C278<br>696<br>499</td>
+                    <td>7132</td>
+                    <td>A748</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>754</td>
+                    <td>C710</td>
+                    <td>759</td>
+                    <td>C637</td>
+                    <td>A62<br>574</td>
+                    <td>634</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>583<br>C699</td>
+                    <td>639</td>
+                    <td>A643</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- B2区域（第三个565） -->
+    <div class="table-section" data-area="B2">
+        <h3>B2区域 - B2-B2-B2</h3>
+        <table class="shelf-table">
+            <thead>
+                <tr>
+                    <th>层数</th>
+                    <th>库位</th>
+                    <th>列1</th>
+                    <th>列2</th>
+                    <th>列3</th>
+                    <th>列4</th>
+                    <th>列5</th>
+                    <th>列6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>一<br>层<br>上<br>层<br>B2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>1148</td>
+                    <td>585</td>
+                    <td>456</td>
+                    <td>A925</td>
+                    <td>2192</td>
+                    <td>C524</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>512<br>748杏</td>
+                    <td>A861</td>
+                    <td>C98</td>
+                    <td>745<br>2777</td>
+                    <td>897<br>736<br>737</td>
+                    <td>2390<br>A628</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>C615<br>C680</td>
+                    <td>2161<br>318</td>
+                    <td>C175</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>二<br>层<br>中<br>层<br>B2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>594</td>
+                    <td>2384</td>
+                    <td>C644</td>
+                    <td>C231<br>C791<br>C5713</td>
+                    <td>J471<br>3577</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>2794<br>6197</td>
+                    <td>F49<br>黑色</td>
+                    <td>115<br>2594</td>
+                    <td>J1427<br>5174</td>
+                    <td>2847<br>3235<br>C2723</td>
+                    <td>JH392<br>C2769</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>3319<br>618</td>
+                    <td>宇77<br>JH105</td>
+                    <td>LX001<br>1758</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="layer" rowspan="3">第<br>三<br>层<br>下<br>层<br>B2</td>
+                    <td class="location">第<br>一<br>货<br>架</td>
+                    <td>2837<br>宇211</td>
+                    <td>C2846<br><br>1919↓改用589</td>
+                    <td>3053<br>HX4359</td>
+                    <td>HX7136<br>HX3685</td>
+                    <td>3096</td>
+                    <td>6210</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>二<br>货<br>架</td>
+                    <td>886<br>416<br>J471</td>
+                    <td>417<br>5508<br>565</td>
+                    <td>6336<br>253<br>6561</td>
+                    <td>133<br>1756<br>548<br>5250</td>
+                    <td>6781<br>1776<br>2836</td>
+                    <td>2427<br>708</td>
+                </tr>
+                <tr>
+                    <td class="location">第<br>三<br>货<br>架</td>
+                    <td>6584</td>
+                    <td>030<br>196</td>
+                    <td>2804<br>5351</td>
+                    <td>3059<br>3235</td>
+                    <td>2144<br>3187<br>3250</td>
+                    <td>227</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const resultList = document.getElementById('resultList');
+            const tableSections = document.querySelectorAll('.table-section');
+            const allCells = document.querySelectorAll('.shelf-table td:not(.layer):not(.location)');
+            
+            // 为每个区域添加第三个水印（左上角）
+            tableSections.forEach(section => {
+                const watermark = document.createElement('div');
+                watermark.className = 'watermark-top-left';
+                watermark.textContent = section.getAttribute('data-area');
+                section.appendChild(watermark);
+            });
+            
+            // 初始化数据属性 - 解决换行问题
+            allCells.forEach(cell => {
+                const content = cell.innerHTML.trim();
+                if (content && content !== '-') {
+                    const originalHTML = cell.innerHTML;
+                    const parts = originalHTML.split('<br>');
+                    const codes = [];
+                    
+                    parts.forEach(part => {
+                        const trimmedPart = part.trim();
+                        if (trimmedPart && trimmedPart !== '-') {
+                            if (trimmedPart.includes('改用') || trimmedPart.includes('↓')) {
+                                const matches = trimmedPart.match(/[A-Za-z0-9]+/g);
+                                if (matches) {
+                                    matches.forEach(match => {
+                                        if (match.length <= 10) {
+                                            codes.push(match);
+                                        }
+                                    });
+                                }
+                            } else {
+                                if (trimmedPart.length <= 10) {
+                                    codes.push(trimmedPart);
+                                }
+                            }
+                        }
+                    });
+                    
+                    if (codes.length > 0) {
+                        cell.setAttribute('data-codes', codes.join('|'));
+                    } else {
+                        cell.setAttribute('data-codes', '');
+                    }
+                    
+                    cell.setAttribute('data-original-html', originalHTML);
+                } else {
+                    cell.setAttribute('data-codes', '');
+                }
+            });
+            
+            let searchTimeout;
+            
+            // 搜索功能
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const searchTerm = this.value.trim();
+                
+                if (searchTerm.length === 0) {
+                    resultList.style.display = 'none';
+                    clearHighlights();
+                    return;
+                }
+                
+                searchTimeout = setTimeout(() => performSearch(searchTerm), 300);
+            });
+            
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch(this.value.trim());
+                }
+            });
+            
+            function performSearch(searchTerm) {
+                if (searchTerm.length < 1) {
+                    resultList.innerHTML = '';
+                    resultList.style.display = 'none';
+                    clearHighlights();
+                    return;
+                }
+                
+                const results = [];
+                const searchLower = searchTerm.toLowerCase();
+                
+                // 搜索所有单元格
+                allCells.forEach(cell => {
+                    const codesStr = cell.getAttribute('data-codes');
+                    if (codesStr) {
+                        const codes = codesStr.split('|');
+                        const matchedCode = codes.find(code => {
+                            const codeLower = code.toLowerCase();
+                            return codeLower === searchLower || 
+                                   codeLower.includes(searchLower) ||
+                                   (searchLower.length >= 3 && codeLower.includes(searchLower));
+                        });
+                        
+                        if (matchedCode) {
+                            const row = cell.parentElement;
+                            const layerCell = row.querySelector('.layer');
+                            const locationCell = row.querySelector('.location');
+                            
+                            const layer = layerCell ? layerCell.textContent.replace(/\n/g, '') : '';
+                            const location = locationCell ? locationCell.textContent.replace(/\n/g, '') : '';
+                            
+                            const cellsInRow = Array.from(row.querySelectorAll('td'));
+                            const colIndex = cellsInRow.indexOf(cell);
+                            
+                            const section = cell.closest('.table-section');
+                            const area = section ? section.getAttribute('data-area') : '';
+                            
+                            results.push({
+                                cell,
+                                area,
+                                layer,
+                                location,
+                                colIndex: colIndex - 1,
+                                text: matchedCode,
+                                section: section // 存储对应区域元素
+                            });
+                        }
+                    }
+                });
+                
+                // 清空之前的高亮
+                clearHighlights();
+                
+                // 显示结果
+                if (results.length > 0) {
+                    resultList.innerHTML = '';
+                    resultList.style.display = 'block';
+                    
+                    // 按区域和位置排序
+                    results.sort((a, b) => {
+                        if (a.area !== b.area) return a.area.localeCompare(b.area);
+                        if (a.layer !== b.layer) return a.layer.localeCompare(b.layer);
+                        if (a.location !== b.location) return a.location.localeCompare(b.location);
+                        return a.colIndex - b.colIndex;
+                    });
+                    
+                    results.forEach((result, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'result-item';
+                        item.innerHTML = `
+                            <span class="area">${result.area}区</span> | 
+                            <span class="pos">${result.layer}${result.location ? ' - ' + result.location : ''}${result.colIndex ? ' - 列' + result.colIndex : ''}</span> | 
+                            <span class="num">${result.text}</span>
+                        `;
+                        
+                        item.addEventListener('click', function() {
+                            // 清除所有高亮
+                            clearHighlights();
+                            
+                            // 高亮选中的单元格
+                            result.cell.classList.add('target-cell');
+                            
+                            // 激活对应的区域
+                            if (result.section) {
+                                result.section.classList.add('active');
+                                
+                                // 延迟滚动以确保区域已激活
+                                setTimeout(() => {
+                                    // 计算单元格相对于文档顶部的精确位置
+                                    const cellRect = result.cell.getBoundingClientRect();
+                                    const absoluteCellTop = cellRect.top + window.pageYOffset;
+                                    
+                                    // 计算顶部固定元素的高度
+                                    const headerHeight = document.querySelector('.header').offsetHeight;
+                                    const searchHeight = document.querySelector('.search-container').offsetHeight;
+                                    const extraSpace = 20; // 额外间距
+                                    const totalOffset = headerHeight + searchHeight + extraSpace;
+                                    
+                                    // 计算目标滚动位置
+                                    const targetScrollTop = absoluteCellTop - totalOffset;
+                                    
+                                    // 平滑滚动到精确位置
+                                    window.scrollTo({
+                                        top: targetScrollTop,
+                                        behavior: 'smooth'
+                                    });
+                                    
+                                    // 关闭结果列表
+                                    resultList.style.display = 'none';
+                                }, 100);
+                            }
+                        });
+                        
+                        resultList.appendChild(item);
+                    });
+                    
+                } else {
+                    resultList.innerHTML = '<div class="no-results">未找到匹配的货号</div>';
+                    resultList.style.display = 'block';
+                }
+            }
+            
+            function clearHighlights() {
+                document.querySelectorAll('.target-cell').forEach(cell => {
+                    cell.classList.remove('target-cell');
+                });
+                
+                tableSections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                document.querySelectorAll('.highlight').forEach(cell => {
+                    cell.classList.remove('highlight');
+                });
+            }
+            
+            // 点击其他地方关闭结果列表
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !resultList.contains(e.target)) {
+                    resultList.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
