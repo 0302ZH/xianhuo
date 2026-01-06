@@ -30,6 +30,126 @@
             font-size: 24px; /* 标题字体加大 */
             font-weight: 700;
         }
+        /* ===== 新增：移动中山卡广告样式 ===== */
+        .ad-banner {
+            margin-bottom: 8px;
+            width: 100%;
+            max-width: 350px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .zs-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            color: #1e6bb8;
+            border: 1px solid #e8f0fe;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        .jump-tip {
+            text-align: center;
+            font-size: 10px;
+            color: #0f5298;
+            margin: 3px 0;
+            font-weight: 600;
+            animation: blink 1.2s infinite;
+        }
+        .zs-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .zs-card-header .title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e6bb8;
+        }
+        .zs-card-header .sim {
+            display: none;
+        }
+        .zs-card-body {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .zs-card-body .img-box {
+            display: none;
+        }
+        .zs-card-body .data-box {
+            flex: 1;
+        }
+        .zs-card-body .data-box .big-num {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1e6bb8;
+            line-height: 1;
+        }
+        .zs-card-body .data-box .data-desc {
+            font-size: 10px;
+            color: #0f5298;
+            margin-top: 3px;
+        }
+        .zs-card-body .data-box .call {
+            display: inline-block;
+            background: #e8f0fe;
+            color: #1e6bb8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-top: 5px;
+        }
+        .zs-card-tips {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-bottom: 5px;
+        }
+        .zs-card-tips .tip-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 10px;
+            color: #0f5298;
+        }
+        .zs-card-tips .tip-item .icon {
+            display: none;
+        }
+        .zs-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .zs-card-footer .price {
+            background: #e8f0fe;
+            color: #1e6bb8;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .zs-card-footer .tags {
+            display: flex;
+            gap: 5px;
+        }
+        .zs-card-footer .tags .tag {
+            background: #f8f8f8;
+            color: #1e6bb8;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 9px;
+            border: 1px solid #e8f0fe;
+        }
+        /* ===== 广告样式结束 ===== */
         .search-container {
             max-width: 700px;
             margin: 0 auto 12px;
@@ -260,6 +380,44 @@
 </head>
 <body>
     <div class="header">
+        <!-- ===== 新增：移动中山卡广告 ===== -->
+        <div class="ad-banner">
+            <a href="http://h5.vip12300.cn/order/index.php?uid=ZDBGMEZjMnJrUEE9&pid=3275" target="_blank" style="text-decoration: none; display: block;">
+                <div class="zs-card">
+                    <div class="zs-card-header">
+                        <div class="title">移动中山卡</div>
+                        <div class="sim"></div>
+                    </div>
+                    <div class="zs-card-body">
+                        <div class="img-box"></div>
+                        <div class="data-box">
+                            <div class="big-num">260GB</div>
+                            <div class="data-desc">【享受230G国内通用流量+30G定向流量】</div>
+                            <div class="call">100分钟通话</div>
+                        </div>
+                    </div>
+                    <div class="zs-card-tips">
+                        <div class="tip-item">
+                            <div class="icon"></div>
+                            <div>激活首充100/200享受优惠</div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="icon"></div>
+                            <div>注意：仅发中山</div>
+                        </div>
+                    </div>
+                    <div class="zs-card-footer">
+                        <div class="price">29元<span style="font-size: 10px;">/月</span></div>
+                        <div class="tags">
+                            <div class="tag">极速包邮</div>
+                            <div class="tag">畅享5G</div>
+                        </div>
+                    </div>
+                    <div class="jump-tip">点击中间位置跳转办理</div>
+                </div>
+            </a>
+        </div>
+        <!-- ===== 广告结束 ===== -->
         <h1>线货架查询</h1>
     </div>
 
@@ -1332,7 +1490,9 @@
                     resultList.style.display = 'none';
                 }
             });
+
         });
     </script>
 </body>
 </html>
+
