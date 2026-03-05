@@ -23,14 +23,13 @@
             text-align: center;
             margin-bottom: 12px;
         }
-        /* 头顶标题"线货架查询"加大：原18px改为24px */
         .header h1 {
             color: #1e6bb8;
             margin-bottom: 6px;
-            font-size: 24px; /* 标题字体加大 */
+            font-size: 24px;
             font-weight: 700;
         }
-        /* ===== 新增：移动中山卡广告样式 ===== */
+        /* ===== 广告样式 ===== */
         .ad-banner {
             margin-bottom: 8px;
             width: 100%;
@@ -38,116 +37,45 @@
             margin-left: auto;
             margin-right: auto;
         }
-        .zs-card {
+        .contact-card {
             background: #ffffff;
             border-radius: 12px;
-            padding: 8px;
+            padding: 16px;
             position: relative;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            color: #1e6bb8;
+            color: #333;
             border: 1px solid #e8f0fe;
         }
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
+        .contact-card-body {
+            display: block;
         }
-        .jump-tip {
-            text-align: center;
-            font-size: 10px;
-            color: #0f5298;
-            margin: 3px 0;
-            font-weight: 600;
-            animation: blink 1.2s infinite;
+        .info-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
-        .zs-card-header {
+        .service-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-        .zs-card-header .title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1e6bb8;
-        }
-        .zs-card-header .sim {
-            display: none;
-        }
-        .zs-card-body {
-            display: flex;
-            align-items: center;
+            justify-content: flex-start;
             gap: 8px;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+            font-size: 17px;
+            color: #333;
         }
-        .zs-card-body .img-box {
-            display: none;
-        }
-        .zs-card-body .data-box {
-            flex: 1;
-        }
-        .zs-card-body .data-box .big-num {
-            font-size: 32px;
-            font-weight: 800;
-            color: #1e6bb8;
-            line-height: 1;
-        }
-        .zs-card-body .data-box .data-desc {
-            font-size: 10px;
-            color: #0f5298;
-            margin-top: 3px;
-        }
-        .zs-card-body .data-box .call {
-            display: inline-block;
-            background: #e8f0fe;
-            color: #1e6bb8;
-            padding: 2px 6px;
+        .service-item .icon {
+            width: 22px;
+            height: 22px;
+            background: #1e6bb8;
+            color: white;
             border-radius: 4px;
-            font-size: 10px;
-            margin-top: 5px;
-        }
-        .zs-card-tips {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            margin-bottom: 5px;
-        }
-        .zs-card-tips .tip-item {
             display: flex;
             align-items: center;
-            gap: 3px;
-            font-size: 10px;
-            color: #0f5298;
-        }
-        .zs-card-tips .tip-item .icon {
-            display: none;
-        }
-        .zs-card-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 3px;
-        }
-        .zs-card-footer .price {
-            background: #e8f0fe;
-            color: #1e6bb8;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 14px;
-            font-weight: 700;
-        }
-        .zs-card-footer .tags {
-            display: flex;
-            gap: 5px;
-        }
-        .zs-card-footer .tags .tag {
-            background: #f8f8f8;
-            color: #1e6bb8;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 9px;
-            border: 1px solid #e8f0fe;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+            flex-shrink: 0;
         }
         /* ===== 广告样式结束 ===== */
         .search-container {
@@ -206,7 +134,6 @@
             font-size: 12px;
         }
         
-        /* 区域表格样式 - 添加水印背景 */
         .table-section {
             background: white;
             border-radius: 8px;
@@ -221,16 +148,15 @@
             z-index: 1;
         }
         
-        /* 水印样式 - 大字体灰色半透明 */
         .table-section::before {
             content: attr(data-area);
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 180px; /* 大字体 */
+            font-size: 180px;
             font-weight: 900;
-            color: rgba(120, 120, 120, 0.08); /* 浅灰色，透明度低 */
+            color: rgba(120, 120, 120, 0.08);
             z-index: -1;
             white-space: nowrap;
             pointer-events: none;
@@ -238,16 +164,15 @@
             opacity: 0.7;
         }
         
-        /* 第二个水印 - 右下角 */
         .table-section::after {
             content: attr(data-area);
             position: absolute;
             top: 70%;
             left: 70%;
             transform: translate(-50%, -50%) rotate(15deg);
-            font-size: 160px; /* 大字体 */
+            font-size: 160px;
             font-weight: 900;
-            color: rgba(120, 120, 120, 0.06); /* 更浅的灰色 */
+            color: rgba(120, 120, 120, 0.06);
             z-index: -1;
             white-space: nowrap;
             pointer-events: none;
@@ -255,16 +180,15 @@
             opacity: 0.5;
         }
         
-        /* 第三个水印 - 左上角 */
         .table-section .watermark-top-left {
             content: attr(data-area);
             position: absolute;
             top: 20%;
             left: 20%;
             transform: translate(-50%, -50%) rotate(-10deg);
-            font-size: 150px; /* 大字体 */
+            font-size: 150px;
             font-weight: 900;
-            color: rgba(120, 120, 120, 0.05); /* 最浅的灰色 */
+            color: rgba(120, 120, 120, 0.05);
             z-index: -1;
             white-space: nowrap;
             pointer-events: none;
@@ -272,7 +196,6 @@
             opacity: 0.4;
         }
         
-        /* 确保表格内容在水印之上 */
         .shelf-table {
             position: relative;
             z-index: 2;
@@ -282,15 +205,14 @@
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-        /* 区域标题（C1/C2/B2等）：加居中、字体加大（原14px改为16px） */
         .table-section h3 {
             color: #1e6bb8;
             border-bottom: 1px dashed #eee;
             padding-bottom: 5px;
             margin-bottom: 8px;
-            font-size: 16px; /* 区域标题字体加大 */
+            font-size: 16px;
             font-weight: 600;
-            text-align: center; /* 区域标题居中 */
+            text-align: center;
             position: relative;
             z-index: 3;
         }
@@ -380,40 +302,34 @@
 </head>
 <body>
     <div class="header">
-        <!-- ===== 新增：移动中山卡广告 ===== -->
+        <!-- ===== 广告已按你要求改好 ===== -->
         <div class="ad-banner">
-            <a href="http://h5.vip12300.cn/order/index.php?uid=ZDBGMEZjMnJrUEE9&pid=3275" target="_blank" style="text-decoration: none; display: block;">
-                <div class="zs-card">
-                    <div class="zs-card-header">
-                        <div class="title">移动中山卡</div>
-                        <div class="sim"></div>
-                    </div>
-                    <div class="zs-card-body">
-                        <div class="img-box"></div>
-                        <div class="data-box">
-                            <div class="big-num">260GB</div>
-                            <div class="data-desc">【享受230G国内通用流量+30G定向流量】</div>
-                            <div class="call">100分钟通话</div>
+            <a href="weixin://contacts/profile/Past0303" target="_blank" style="text-decoration: none;">
+                <div class="contact-card">
+                    <div class="contact-card-body">
+                        <div class="info-box">
+                            <div class="service-item">
+                                <div class="icon">📶</div>
+                                <div>大流量卡办理</div>
+                            </div>
+                            <div class="service-item">
+                                <div class="icon">📱</div>
+                                <div>二手手机回收</div>
+                            </div>
+                            <div class="service-item">
+                                <div class="icon">📡</div>
+                                <div>宽带业务</div>
+                            </div>
+                            <div class="service-item">
+                                <div class="icon">💬</div>
+                                <div>微信: Past0303</div>
+                            </div>
+                        </div>
+                        <div class="service-item" style="justify-content: center; margin-top: 12px;">
+                            <div class="icon">🔍</div>
+                            <div>搜索微信号添加好友</div>
                         </div>
                     </div>
-                    <div class="zs-card-tips">
-                        <div class="tip-item">
-                            <div class="icon"></div>
-                            <div>激活首充100/200享受优惠</div>
-                        </div>
-                        <div class="tip-item">
-                            <div class="icon"></div>
-                            <div>注意：仅发中山</div>
-                        </div>
-                    </div>
-                    <div class="zs-card-footer">
-                        <div class="price">29元<span style="font-size: 10px;">/月</span></div>
-                        <div class="tags">
-                            <div class="tag">极速包邮</div>
-                            <div class="tag">畅享5G</div>
-                        </div>
-                    </div>
-                    <div class="jump-tip">点击中间位置跳转办理</div>
                 </div>
             </a>
         </div>
@@ -1446,53 +1362,32 @@
                                     const extraSpace = 20; // 额外间距
                                     const totalOffset = headerHeight + searchHeight + extraSpace;
                                     
-                                    // 计算目标滚动位置
-                                    const targetScrollTop = absoluteCellTop - totalOffset;
-                                    
-                                    // 平滑滚动到精确位置
+                                    // 滚动到单元格位置，使其居中于视口
                                     window.scrollTo({
-                                        top: targetScrollTop,
+                                        top: absoluteCellTop - totalOffset,
                                         behavior: 'smooth'
                                     });
-                                    
-                                    // 关闭结果列表
-                                    resultList.style.display = 'none';
                                 }, 100);
                             }
                         });
                         
                         resultList.appendChild(item);
                     });
-                    
                 } else {
-                    resultList.innerHTML = '<div class="no-results">未找到匹配的货号</div>';
+                    resultList.innerHTML = '<div class="no-results">未找到相关货号</div>';
                     resultList.style.display = 'block';
                 }
             }
             
             function clearHighlights() {
-                document.querySelectorAll('.target-cell').forEach(cell => {
+                allCells.forEach(cell => {
                     cell.classList.remove('target-cell');
                 });
-                
                 tableSections.forEach(section => {
                     section.classList.remove('active');
                 });
-                
-                document.querySelectorAll('.highlight').forEach(cell => {
-                    cell.classList.remove('highlight');
-                });
             }
-            
-            // 点击其他地方关闭结果列表
-            document.addEventListener('click', function(e) {
-                if (!searchInput.contains(e.target) && !resultList.contains(e.target)) {
-                    resultList.style.display = 'none';
-                }
-            });
-
         });
     </script>
 </body>
 </html>
-
